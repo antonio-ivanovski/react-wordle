@@ -39,7 +39,8 @@ import './App.css'
 import { AlertContainer } from './components/alerts/AlertContainer'
 import { useAlert } from './context/AlertContext'
 import { Navbar } from './components/navbar/Navbar'
-import initGame, { Game, GameState } from './game'
+import initGame, { Game, GameState, computeMyPlayerState } from './game'
+import { isArrayBufferView } from 'util/types'
 
 function App() {
   const prefersDarkMode = window.matchMedia(
@@ -47,10 +48,14 @@ function App() {
   ).matches
 
   const [gameState, setGameState] = useState<GameState>()
+  const myPlayerState = gameState?.p2State && computeMyPlayerState(gameState)
+  const opponentPlayerState =
+    gameState?.p2State && computeMyPlayerState(gameState)
+
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
 
-  const currentGuess = gameState?.p1State.currentGuess ?? ''
+  const currentGuess = myPlayerState?.currentGuess ?? ''
   const [isGameWon, setIsGameWon] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
@@ -68,7 +73,7 @@ function App() {
     getStoredIsHighContrastMode()
   )
   const [isRevealing, setIsRevealing] = useState(false)
-  const guesses = gameState?.p1State.guesses ?? []
+  const guesses = myPlayerState?.guesses ?? []
 
   const [stats, setStats] = useState(() => loadStats())
 
@@ -91,8 +96,14 @@ function App() {
   const gameRef = useRef<Game>()
 
   useEffect(() => {
-    gameRef.current = initGame()
+    const query = new URLSearchParams(window.location.search)
+    const existingGameId = query.get('gameId') ?? undefined
+    gameRef.current = initGame(existingGameId)
     gameRef.current.onStateChange((state) => {
+      if (existingGameId !== state.gameId) {
+        query.set('gameId', state.gameId)
+        window.location.search = query.toString()
+      }
       setGameState(state)
     })
   }, [])
@@ -134,9 +145,9 @@ function App() {
     setCurrentRowClass('')
   }
 
-  useEffect(() => {
-    saveGameStateToLocalStorage({ guesses, solution })
-  }, [guesses])
+  // useEffect(() => {
+  //   saveGameStateToLocalStorage({ guesses, solution })
+  // }, [guesses])
 
   useEffect(() => {
     if (isGameWon) {
@@ -235,6 +246,8 @@ function App() {
     }
   }
 
+  useEffect(() => console.log(isRevealing), [isRevealing])
+
   return (
     <div className="h-screen flex flex-col">
       <Navbar
@@ -244,12 +257,24 @@ function App() {
       />
       <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow">
         <div className="pb-6 grow">
-          <Grid
-            guesses={guesses}
-            currentGuess={currentGuess}
-            isRevealing={isRevealing}
-            currentRowClassName={currentRowClass}
-          />
+          {gameState?.p1State == null || gameState?.p2State == null ? (
+            <p className="text-xl font-bold dark:text-white">
+              WAITING FOR PLAYER 2
+            </p>
+          ) : (
+            <div className="flex flex-row justify-around">
+              <Grid
+                guesses={gameState.p1State.guesses ?? []}
+                currentGuess={gameState.p1State.currentGuess ?? ''}
+                currentRowClassName={currentRowClass}
+              />
+              <Grid
+                guesses={gameState.p2State.guesses ?? []}
+                currentGuess={gameState.p2State.currentGuess ?? ''}
+                currentRowClassName={currentRowClass}
+              />
+            </div>
+          )}
         </div>
         <Keyboard
           onChar={onChar}

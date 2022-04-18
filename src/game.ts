@@ -1,6 +1,14 @@
 import firebaseConfig from './firebaseConfig'
 import { initializeApp } from 'firebase/app'
-import { child, getDatabase, onValue, push, ref, set } from 'firebase/database'
+import {
+  child,
+  getDatabase,
+  onValue,
+  push,
+  ref,
+  runTransaction,
+  set,
+} from 'firebase/database'
 import { v4 as uuid, validate as isUuid } from 'uuid'
 
 type PlayerState = {
@@ -10,6 +18,7 @@ type PlayerState = {
 }
 
 export type GameState = {
+  gameId: string
   p1State: PlayerState
   p2State?: PlayerState
 }
@@ -32,6 +41,7 @@ const initGame: (gameId?: string) => Game = (gameId = uuid()) => {
     if (!snapshot.exists()) {
       // Create new game
       const initState: GameState = {
+        gameId,
         p1State: {
           id: playerId(),
           currentGuess: '',
@@ -62,13 +72,23 @@ const initGame: (gameId?: string) => Game = (gameId = uuid()) => {
     submitGuess: (guess) => {
       const playerStateField =
         playerId() === gameState.p1State.id ? 'p1State' : 'p2State'
-      set(child(gameRef, `${playerStateField}/guesses`), [
-        ...(gameState[playerStateField]?.guesses ?? []),
-        guess,
-      ])
-      set(child(gameRef, `${playerStateField}/currentGuess`), '')
+      set(child(gameRef, `${playerStateField}`), {
+        ...gameState,
+        currentGuess: '',
+        guesses: [...(gameState[playerStateField]?.guesses ?? []), guess],
+      })
     },
   }
+}
+
+export function computeMyPlayerState(gameState: GameState): PlayerState {
+  if (gameState.p1State.id === playerId()) return gameState.p1State
+  return gameState.p2State!
+}
+
+export function computeOpponentPlayerState(gameState: GameState): PlayerState {
+  if (gameState.p1State.id === playerId()) return gameState.p2State!
+  return gameState.p1State
 }
 
 function playerId(): string {
