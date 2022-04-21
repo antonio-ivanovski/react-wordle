@@ -7,6 +7,7 @@ type PlayerState = {
   id: string
   currentGuess: string
   guesses: string[]
+  status: 'playing' | 'won' | 'lost'
 }
 
 export type GameState = {
@@ -19,6 +20,7 @@ type GameStateChangeCallback = (newState: GameState) => void
 export type Game = {
   enterGuess: (guess: string) => void
   submitGuess: (guess: string) => void
+  submitStatus: (newStatus: PlayerState['status']) => void
   onStateChange: (callback: GameStateChangeCallback) => void
 }
 
@@ -38,6 +40,7 @@ const initGame: (gameId?: string) => Game = (gameId = uuid()) => {
           id: playerId(),
           currentGuess: '',
           guesses: [],
+          status: 'playing',
         },
       }
       set(gameRef, initState)
@@ -45,7 +48,12 @@ const initGame: (gameId?: string) => Game = (gameId = uuid()) => {
       gameState = snapshot.val()
       if (gameState.p1State.id !== playerId() && gameState.p2State == null) {
         // joining as Player 2
-        set(child(gameRef, 'p2State/id'), playerId())
+        set(child(gameRef, 'p2State'), {
+          id: playerId(),
+          currentGuess: '',
+          guesses: [],
+          status: 'playing',
+        })
       } else {
         // Game initialized for current player, we can show something
         gameStateChangeCallback?.(gameState)
@@ -70,6 +78,11 @@ const initGame: (gameId?: string) => Game = (gameId = uuid()) => {
         currentGuess: '',
         guesses: [...(gameState[playerStateField]?.guesses ?? []), guess],
       })
+    },
+    submitStatus: (newStatus) => {
+      const playerStateField =
+        playerId() === gameState.p1State.id ? 'p1State' : 'p2State'
+      set(child(gameRef, `${playerStateField}/status`), newStatus)
     },
   }
 }

@@ -38,7 +38,12 @@ import './App.css'
 import { AlertContainer } from './components/alerts/AlertContainer'
 import { useAlert } from './context/AlertContext'
 import { Navbar } from './components/navbar/Navbar'
-import initGame, { Game, GameState, computeMyPlayerState } from './game'
+import initGame, {
+  Game,
+  GameState,
+  computeMyPlayerState,
+  computeOpponentPlayerState,
+} from './game'
 
 function App() {
   const prefersDarkMode = window.matchMedia(
@@ -47,17 +52,20 @@ function App() {
 
   const [gameState, setGameState] = useState<GameState>()
   const myPlayerState = gameState?.p2State && computeMyPlayerState(gameState)
+  const opponentPlayerState =
+    gameState?.p2State && computeOpponentPlayerState(gameState)
 
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
 
   const currentGuess = myPlayerState?.currentGuess ?? ''
-  const [isGameWon, setIsGameWon] = useState(false)
+  const isGameWon = myPlayerState?.status === 'won'
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const [currentRowClass, setCurrentRowClass] = useState('')
-  const [isGameLost, setIsGameLost] = useState(false)
+  const isGameLost =
+    myPlayerState?.status === 'lost' || opponentPlayerState?.status === 'won'
   const [isDarkMode, setIsDarkMode] = useState(
     localStorage.getItem('theme')
       ? localStorage.getItem('theme') === 'dark'
@@ -158,6 +166,11 @@ function App() {
     }
 
     if (isGameLost) {
+      showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
+        persist: true,
+        delayMs: REVEAL_TIME_MS * MAX_WORD_LENGTH + 1,
+      })
+
       setTimeout(() => {
         setIsStatsModalOpen(true)
       }, GAME_LOST_INFO_DELAY)
@@ -165,16 +178,15 @@ function App() {
   }, [isGameWon, isGameLost, showSuccessAlert])
 
   const onChar = (value: string) => {
-    if (
-      unicodeLength(`${currentGuess}${value}`) <= MAX_WORD_LENGTH &&
-      guesses.length < MAX_CHALLENGES &&
-      !isGameWon
-    ) {
+    if (isGameWon || isGameLost) return
+
+    if (unicodeLength(`${currentGuess}${value}`) <= MAX_WORD_LENGTH) {
       gameRef.current?.enterGuess(`${currentGuess}${value}`)
     }
   }
 
   const onDelete = () => {
+    if (isGameWon || isGameLost) return
     gameRef.current?.enterGuess(
       new GraphemeSplitter().splitGraphemes(currentGuess).slice(0, -1).join('')
     )
@@ -228,16 +240,12 @@ function App() {
 
       if (winningWord) {
         setStats(addStatsForCompletedGame(stats, guesses.length))
-        return setIsGameWon(true)
+        gameRef.current?.submitStatus('won')
       }
 
       if (guesses.length === MAX_CHALLENGES - 1) {
         setStats(addStatsForCompletedGame(stats, guesses.length + 1))
-        setIsGameLost(true)
-        showErrorAlert(CORRECT_WORD_MESSAGE(solution), {
-          persist: true,
-          delayMs: REVEAL_TIME_MS * MAX_WORD_LENGTH + 1,
-        })
+        gameRef.current?.submitStatus('lost')
       }
     }
   }
