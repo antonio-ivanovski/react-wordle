@@ -44,6 +44,7 @@ import initGame, {
   computeMyPlayerState,
   computeOpponentPlayerState,
 } from './game'
+import { WaitingForPlayer2Modal } from './components/modals/WaitingForPlayer2Modal'
 
 function App() {
   const prefersDarkMode = window.matchMedia(
@@ -51,9 +52,11 @@ function App() {
   ).matches
 
   const [gameState, setGameState] = useState<GameState>()
-  const myPlayerState = gameState?.p2State && computeMyPlayerState(gameState)
-  const opponentPlayerState =
-    gameState?.p2State && computeOpponentPlayerState(gameState)
+  const gameStarted = gameState?.p2State != null
+  const myPlayerState = gameStarted ? computeMyPlayerState(gameState) : null
+  const opponentPlayerState = gameStarted
+    ? computeOpponentPlayerState(gameState)
+    : null
 
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
@@ -258,45 +261,37 @@ function App() {
         setIsSettingsModalOpen={setIsSettingsModalOpen}
       />
       <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow">
-        {gameState?.p1State == null || gameState?.p2State == null ? (
-          <p className="text-xl font-bold dark:text-white">
-            WAITING FOR PLAYER 2
-          </p>
-        ) : (
-          <div>
-            <div className="pb-6 grow">
-              <div className="flex flex-row justify-around">
-                <Grid
-                  guesses={gameState.p1State.guesses ?? []}
-                  currentGuess={gameState.p1State.currentGuess ?? ''}
-                  currentRowClassName={
-                    gameState.p1State === myPlayerState ? currentRowClass : ''
-                  }
-                  isRevealing={
-                    gameState.p1State === myPlayerState ? isRevealing : false
-                  }
-                />
-                <Grid
-                  guesses={gameState.p2State.guesses ?? []}
-                  currentGuess={gameState.p2State.currentGuess ?? ''}
-                  currentRowClassName={
-                    gameState.p2State === myPlayerState ? currentRowClass : ''
-                  }
-                  isRevealing={
-                    gameState.p2State === myPlayerState ? isRevealing : false
-                  }
-                />
-              </div>
-            </div>
-            <Keyboard
-              onChar={onChar}
-              onDelete={onDelete}
-              onEnter={onEnter}
-              guesses={guesses}
-              isRevealing={isRevealing}
+        <div className="pb-6 grow">
+          <div className="flex flex-row justify-around">
+            <Grid
+              guesses={gameState?.p1State.guesses ?? []}
+              currentGuess={gameState?.p1State.currentGuess ?? ''}
+              currentRowClassName={
+                gameState?.p1State === myPlayerState ? currentRowClass : ''
+              }
+              isRevealing={
+                gameState?.p1State === myPlayerState ? isRevealing : false
+              }
+            />
+            <Grid
+              guesses={gameState?.p2State?.guesses ?? []}
+              currentGuess={gameState?.p2State?.currentGuess ?? ''}
+              currentRowClassName={
+                gameState?.p2State === myPlayerState ? currentRowClass : ''
+              }
+              isRevealing={
+                gameState?.p2State === myPlayerState ? isRevealing : false
+              }
             />
           </div>
-        )}
+        </div>
+        <Keyboard
+          onChar={onChar}
+          onDelete={onDelete}
+          onEnter={onEnter}
+          guesses={guesses}
+          isRevealing={isRevealing}
+        />
         <InfoModal
           isOpen={isInfoModalOpen}
           handleClose={() => setIsInfoModalOpen(false)}
@@ -324,6 +319,7 @@ function App() {
           isHighContrastMode={isHighContrastMode}
           handleHighContrastMode={handleHighContrastMode}
         />
+        <WaitingForPlayer2Modal isOpen={!gameStarted} />
         <AlertContainer />
       </div>
     </div>
