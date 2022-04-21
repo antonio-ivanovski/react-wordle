@@ -1,26 +1,15 @@
 import { getGuessStatuses } from '../../lib/statuses'
 import { Cell } from './Cell'
 import { unicodeSplit } from '../../lib/words'
-import { useEffect, useState } from 'react'
-import { MAX_WORD_LENGTH, REVEAL_TIME_MS } from '../../constants/settings'
 
 type Props = {
   guess: string
-  reveal?: boolean
+  isRevealing?: boolean
 }
 
-export const CompletedRow = ({ guess, reveal }: Props) => {
-  const [isRevealing, setIsRevealing] = useState(reveal)
+export const CompletedRow = ({ guess, isRevealing }: Props) => {
   const statuses = getGuessStatuses(guess)
   const splitGuess = unicodeSplit(guess)
-
-  useEffect(() => {
-    if (reveal === true) {
-      setTimeout(() => {
-        setIsRevealing(false)
-      }, REVEAL_TIME_MS * MAX_WORD_LENGTH)
-    }
-  }, [reveal])
 
   return (
     <div className="flex justify-center mb-1">

@@ -242,8 +242,6 @@ function App() {
     }
   }
 
-  useEffect(() => console.log(isRevealing), [isRevealing])
-
   return (
     <div className="h-screen flex flex-col">
       <Navbar
@@ -252,33 +250,45 @@ function App() {
         setIsSettingsModalOpen={setIsSettingsModalOpen}
       />
       <div className="pt-2 px-1 pb-8 md:max-w-7xl w-full mx-auto sm:px-6 lg:px-8 flex flex-col grow">
-        <div className="pb-6 grow">
-          {gameState?.p1State == null || gameState?.p2State == null ? (
-            <p className="text-xl font-bold dark:text-white">
-              WAITING FOR PLAYER 2
-            </p>
-          ) : (
-            <div className="flex flex-row justify-around">
-              <Grid
-                guesses={gameState.p1State.guesses ?? []}
-                currentGuess={gameState.p1State.currentGuess ?? ''}
-                currentRowClassName={currentRowClass}
-              />
-              <Grid
-                guesses={gameState.p2State.guesses ?? []}
-                currentGuess={gameState.p2State.currentGuess ?? ''}
-                currentRowClassName={currentRowClass}
-              />
+        {gameState?.p1State == null || gameState?.p2State == null ? (
+          <p className="text-xl font-bold dark:text-white">
+            WAITING FOR PLAYER 2
+          </p>
+        ) : (
+          <div>
+            <div className="pb-6 grow">
+              <div className="flex flex-row justify-around">
+                <Grid
+                  guesses={gameState.p1State.guesses ?? []}
+                  currentGuess={gameState.p1State.currentGuess ?? ''}
+                  currentRowClassName={
+                    gameState.p1State === myPlayerState ? currentRowClass : ''
+                  }
+                  isRevealing={
+                    gameState.p1State === myPlayerState ? isRevealing : false
+                  }
+                />
+                <Grid
+                  guesses={gameState.p2State.guesses ?? []}
+                  currentGuess={gameState.p2State.currentGuess ?? ''}
+                  currentRowClassName={
+                    gameState.p2State === myPlayerState ? currentRowClass : ''
+                  }
+                  isRevealing={
+                    gameState.p2State === myPlayerState ? isRevealing : false
+                  }
+                />
+              </div>
             </div>
-          )}
-        </div>
-        <Keyboard
-          onChar={onChar}
-          onDelete={onDelete}
-          onEnter={onEnter}
-          guesses={guesses}
-          isRevealing={isRevealing}
-        />
+            <Keyboard
+              onChar={onChar}
+              onDelete={onDelete}
+              onEnter={onEnter}
+              guesses={guesses}
+              isRevealing={isRevealing}
+            />
+          </div>
+        )}
         <InfoModal
           isOpen={isInfoModalOpen}
           handleClose={() => setIsInfoModalOpen(false)}
