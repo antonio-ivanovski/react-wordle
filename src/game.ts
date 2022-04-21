@@ -65,7 +65,8 @@ const initGame: (gameId?: string) => Game = (gameId = uuid()) => {
       const playerStateField =
         playerId() === gameState.p1State.id ? 'p1State' : 'p2State'
       set(child(gameRef, `${playerStateField}`), {
-        ...gameState,
+        ...gameState[playerStateField],
+
         currentGuess: '',
         guesses: [...(gameState[playerStateField]?.guesses ?? []), guess],
       })
