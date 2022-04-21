@@ -1,15 +1,7 @@
 import firebaseConfig from './firebaseConfig'
 import { initializeApp } from 'firebase/app'
-import {
-  child,
-  getDatabase,
-  onValue,
-  push,
-  ref,
-  runTransaction,
-  set,
-} from 'firebase/database'
-import { v4 as uuid, validate as isUuid } from 'uuid'
+import { child, getDatabase, onValue, ref, set } from 'firebase/database'
+import { v4 as uuid } from 'uuid'
 
 type PlayerState = {
   id: string
@@ -30,7 +22,7 @@ export type Game = {
   onStateChange: (callback: GameStateChangeCallback) => void
 }
 
-const app = initializeApp(firebaseConfig)
+initializeApp(firebaseConfig)
 
 const initGame: (gameId?: string) => Game = (gameId = uuid()) => {
   let gameState: GameState

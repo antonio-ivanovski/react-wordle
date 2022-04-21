@@ -20,7 +20,7 @@ export const CompletedRow = ({ guess, reveal }: Props) => {
         setIsRevealing(false)
       }, REVEAL_TIME_MS * MAX_WORD_LENGTH)
     }
-  }, [])
+  }, [reveal])
 
   return (
     <div className="flex justify-center mb-1">

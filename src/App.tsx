@@ -29,7 +29,6 @@ import {
 import { addStatsForCompletedGame, loadStats } from './lib/stats'
 import {
   loadGameStateFromLocalStorage,
-  saveGameStateToLocalStorage,
   setStoredIsHighContrastMode,
   getStoredIsHighContrastMode,
 } from './lib/localStorage'
@@ -40,7 +39,6 @@ import { AlertContainer } from './components/alerts/AlertContainer'
 import { useAlert } from './context/AlertContext'
 import { Navbar } from './components/navbar/Navbar'
 import initGame, { Game, GameState, computeMyPlayerState } from './game'
-import { isArrayBufferView } from 'util/types'
 
 function App() {
   const prefersDarkMode = window.matchMedia(
@@ -49,8 +47,6 @@ function App() {
 
   const [gameState, setGameState] = useState<GameState>()
   const myPlayerState = gameState?.p2State && computeMyPlayerState(gameState)
-  const opponentPlayerState =
-    gameState?.p2State && computeMyPlayerState(gameState)
 
   const { showError: showErrorAlert, showSuccess: showSuccessAlert } =
     useAlert()
