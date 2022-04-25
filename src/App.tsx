@@ -178,7 +178,7 @@ function App() {
         setIsStatsModalOpen(true)
       }, GAME_LOST_INFO_DELAY)
     }
-  }, [isGameWon, isGameLost, showSuccessAlert])
+  }, [isGameWon, isGameLost, showSuccessAlert, showErrorAlert])
 
   const onChar = (value: string) => {
     if (isGameWon || isGameLost) return

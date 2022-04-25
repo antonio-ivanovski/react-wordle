@@ -1,7 +1,7 @@
 {
   "name": "game",
   "version": "0.1.0",
-  "homepage": "https://toteto.github.io/react-wordle",
+  "homepage": "https://wordle.tote.mk/",
   "private": true,
   "dependencies": {
     "@headlessui/react": "^1.4.2",
